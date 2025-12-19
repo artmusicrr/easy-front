@@ -26,12 +26,11 @@ import { formatDate, formatCurrency, maskCPF } from '@/utils/utils'
 export default function PatientDetailsPage() {
   const { id } = useParams() as { id: string }
 
-  const { data: patient, isLoading: isLoadingPatient } = useQuery({
+  const { data: patient, isLoading: isLoadingPatient, isError: isErrorPatient, error: patientError } = useQuery({
     queryKey: ['patient', id],
     queryFn: async () => {
-      const response = await patientService.getAll({ page: 1, limit: 1 })
-      // Simulação: buscamos na lista (no backend real haveria GET /api/patients/[id])
-      return response.patients.find((p: any) => p.id === id)
+      const response = await patientService.getById(id)
+      return response.patient
     },
   })
 
@@ -51,7 +50,24 @@ export default function PatientDetailsPage() {
     </div>
   }
 
-  if (!patient) return <div>Paciente não encontrado.</div>
+  if (isErrorPatient || !patient) {
+    const errorMessage = patientError ? (patientError as any).message : 'Paciente não encontrado';
+    return (
+      <div className="p-12 text-center bg-white rounded-xl border border-secondary-100 shadow-soft max-w-lg mx-auto mt-10">
+        <User className="h-12 w-12 text-secondary-300 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-secondary-900 mb-2">Erro ao carregar paciente</h2>
+        <p className="text-secondary-500 mb-2">ID solicitado: <code className="bg-secondary-50 px-2 py-0.5 rounded text-xs">{id}</code></p>
+        <p className="text-secondary-500 mb-6">{errorMessage}</p>
+        
+        <div className="flex justify-center gap-4">
+           <Link href="/patients">
+             <Button variant="outline">Voltar para listagem</Button>
+           </Link>
+           <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

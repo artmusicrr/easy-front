@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { 
@@ -178,14 +179,14 @@ export default function DashboardPage() {
 
            <Card title="Ações Rápidas">
               <div className="grid grid-cols-2 gap-3">
-                 <button className="flex flex-col items-center justify-center rounded-xl bg-primary-600 p-4 text-white shadow-sm transition-all hover:bg-primary-700">
+                 <Link href="/patients/new" className="flex flex-col items-center justify-center rounded-xl bg-primary-600 p-4 text-white shadow-sm transition-all hover:bg-primary-700">
                     <Users className="mb-2 h-6 w-6" />
                     <span className="text-xs font-semibold">Novo Paciente</span>
-                 </button>
-                 <button className="flex flex-col items-center justify-center rounded-xl bg-accent-600 p-4 text-white shadow-sm transition-all hover:bg-accent-700">
+                 </Link>
+                 <Link href="/payments/new" className="flex flex-col items-center justify-center rounded-xl bg-accent-600 p-4 text-white shadow-sm transition-all hover:bg-accent-700">
                     <DollarSign className="mb-2 h-6 w-6" />
                     <span className="text-xs font-semibold">Registrar Pagto</span>
-                 </button>
+                 </Link>
               </div>
            </Card>
         </div>

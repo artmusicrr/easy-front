@@ -27,7 +27,7 @@ import { formatCurrency, formatDate } from '@/utils/utils'
 export default function TreatmentDetailsPage() {
   const { id } = useParams() as { id: string }
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ['treatment', id],
     queryFn: () => treatmentService.getById(id),
   })
@@ -42,8 +42,27 @@ export default function TreatmentDetailsPage() {
     </div>
   }
 
+  if (isError || !data || !data.treatment) {
+    const errorMessage = error ? (error as any).message : 'Tratamento não encontrado';
+    return (
+      <div className="p-12 text-center bg-white rounded-xl border border-secondary-100 shadow-soft max-w-lg mx-auto mt-10">
+        <Stethoscope className="h-12 w-12 text-secondary-300 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-secondary-900 mb-2">Erro ao carregar tratamento</h2>
+        <p className="text-secondary-500 mb-2">ID solicitado: <code className="bg-secondary-50 px-2 py-0.5 rounded text-xs">{id}</code></p>
+        <p className="text-secondary-500 mb-6">{errorMessage}</p>
+        
+        <div className="flex justify-center gap-4">
+           <Link href="/treatments">
+             <Button variant="outline">Voltar para lista</Button>
+           </Link>
+           <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+        </div>
+      </div>
+    )
+  }
+
   const { treatment } = data
-  const { financeiro, risco } = treatment
+  const { financeiro = { saldoDevedor: 0, valorTotal: 0, valorPago: 0, percentualPago: 0 }, risco = { score: 0, nivel: 'baixo' } } = treatment
 
   return (
     <div className="space-y-6">

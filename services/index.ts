@@ -17,14 +17,22 @@ export const patientService = {
     const response = await api.get('/patients', { params })
     return response.data
   },
+  getById: async (id: string) => {
+    const response = await api.get(`/patients/${id}`)
+    return response.data
+  },
   create: async (data: PatientInput) => {
     const response = await api.post('/patients', data)
+    return response.data
+  },
+  update: async (id: string, data: Partial<PatientInput>) => {
+    const response = await api.put(`/patients/${id}`, data)
     return response.data
   },
 }
 
 export const treatmentService = {
-  getAll: async (params?: { page?: number; limit?: number; status?: string; patient_id?: string }) => {
+  getAll: async (params?: { page?: number; limit?: number; status?: string; patient_id?: string; search?: string }) => {
     const response = await api.get('/treatments', { params })
     return response.data
   },

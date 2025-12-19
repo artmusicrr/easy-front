@@ -16,6 +16,11 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  
+  if (process.env.NODE_ENV === 'development') {
+     console.log(`[API Request] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.params || '')
+  }
+  
   return config
 })
 
