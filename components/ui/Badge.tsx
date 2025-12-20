@@ -3,7 +3,7 @@ import { cn } from '@/utils/utils'
 
 interface BadgeProps {
   children: ReactNode
-  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info'
+  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'outline'
   className?: string
 }
 
@@ -15,6 +15,7 @@ export function Badge({ children, variant = 'primary', className }: BadgeProps) 
     warning: 'bg-amber-100 text-amber-700',
     error: 'bg-red-100 text-red-700',
     info: 'bg-sky-100 text-sky-700',
+    outline: 'border border-secondary-200 text-secondary-700 bg-transparent',
   }
 
   return (

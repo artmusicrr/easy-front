@@ -13,16 +13,30 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   isLoading?: boolean
+  pageCount?: number
+  pageIndex?: number
+  onPageChange?: (page: number) => void
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   isLoading,
+  pageCount,
+  pageIndex = 1,
+  onPageChange,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
+    pageCount: pageCount || -1,
+    state: {
+      pagination: {
+        pageIndex: pageIndex - 1, // ReactTable 0-indexed
+        pageSize: 10,
+      },
+    },
+    manualPagination: !!pageCount,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })
@@ -42,9 +56,9 @@ export function DataTable<TData, TValue>({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </th>
                 ))}
               </tr>
@@ -52,7 +66,7 @@ export function DataTable<TData, TValue>({
           </thead>
           <tbody className="divide-y divide-secondary-100">
             {isLoading ? (
-               <tr>
+              <tr>
                 <td colSpan={columns.length} className="h-24 text-center">
                   <div className="flex items-center justify-center space-x-2">
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600"></div>
@@ -90,19 +104,20 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm text-secondary-500">
           Mostrando {table.getRowModel().rows.length} de {data.length} registros
+          {pageCount && ` (Página ${pageIndex} de ${pageCount})`}
         </div>
         <div className="flex space-x-2">
           <button
             className="px-3 py-1 rounded-md border border-secondary-200 bg-white text-sm text-secondary-600 disabled:opacity-50 hover:bg-secondary-50 transition-colors"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => onPageChange ? onPageChange(pageIndex - 1) : table.previousPage()}
+            disabled={onPageChange ? pageIndex <= 1 : !table.getCanPreviousPage()}
           >
             Anterior
           </button>
           <button
             className="px-3 py-1 rounded-md border border-secondary-200 bg-white text-sm text-secondary-600 disabled:opacity-50 hover:bg-secondary-50 transition-colors"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => onPageChange ? onPageChange(pageIndex + 1) : table.nextPage()}
+            disabled={onPageChange ? pageIndex >= (pageCount || 1) : !table.getCanNextPage()}
           >
             Próximo
           </button>
