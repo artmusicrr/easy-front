@@ -71,3 +71,17 @@ export const healthService = {
     return response.data
   },
 }
+
+export const dashboardService = {
+  getStats: async () => {
+    const response = await api.get('/dashboard/stats')
+    return response.data
+  },
+}
+
+export const userService = {
+  getDentists: async () => {
+    const response = await api.get('/dentists')
+    return response.data
+  },
+}
