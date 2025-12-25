@@ -22,6 +22,10 @@ interface Patient {
   _count: {
     treatments: number
   }
+  treatments: {
+    descricao: string
+    status: string
+  }[]
 }
 
 export default function PatientsPage() {
@@ -64,7 +68,7 @@ export default function PatientsPage() {
       header: 'Cadastro',
       cell: ({ row }) => (
         <div className="text-secondary-500">
-           {formatDate(row.original.data_cadastro)}
+          {formatDate(row.original.data_cadastro)}
         </div>
       ),
     },
@@ -72,9 +76,17 @@ export default function PatientsPage() {
       accessorKey: 'treatments',
       header: 'Tratamentos',
       cell: ({ row }) => (
-        <Badge variant="info">
-           {row.original._count.treatments} tratamentos
-        </Badge>
+        <div className="flex flex-wrap gap-1">
+          {row.original.treatments && row.original.treatments.length > 0 ? (
+            row.original.treatments.map((t, i) => (
+              <Badge key={i} variant="outline" className="text-xs">
+                {t.descricao}
+              </Badge>
+            ))
+          ) : (
+            <span className="text-secondary-400 text-xs italic">Nenhum</span>
+          )}
+        </div>
       ),
     },
     {
@@ -82,15 +94,15 @@ export default function PatientsPage() {
       header: '',
       cell: ({ row }) => (
         <div className="flex justify-end space-x-2">
-           <Link href={`/patients/${row.original.id}`}>
-             <Button variant="ghost" size="sm">
-                <FileText className="h-4 w-4 mr-2" />
-                Detalhes
-             </Button>
-           </Link>
-           <Button variant="ghost" size="sm" className="px-2">
-              <MoreHorizontal className="h-4 w-4 text-secondary-400" />
-           </Button>
+          <Link href={`/patients/${row.original.id}`}>
+            <Button variant="ghost" size="sm">
+              <FileText className="h-4 w-4 mr-2" />
+              Detalhes
+            </Button>
+          </Link>
+          <Button variant="ghost" size="sm" className="px-2">
+            <MoreHorizontal className="h-4 w-4 text-secondary-400" />
+          </Button>
         </div>
       ),
     },
@@ -122,14 +134,17 @@ export default function PatientsPage() {
           />
         </div>
         <Button variant="outline" className="h-11">
-           Filtros
+          Filtros
         </Button>
       </div>
 
-      <DataTable 
-        columns={columns} 
-        data={data?.patients || []} 
-        isLoading={isLoading} 
+      <DataTable
+        columns={columns}
+        data={data?.patients || []}
+        isLoading={isLoading}
+        pageCount={data?.pagination?.totalPages || 1}
+        pageIndex={page}
+        onPageChange={setPage}
       />
     </div>
   )
