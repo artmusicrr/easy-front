@@ -167,6 +167,9 @@ export default function UsersAdminPage() {
         columns={columns} 
         data={data?.users || []} 
         isLoading={isLoading} 
+        pageCount={data?.pagination?.totalPages || 1}
+        pageIndex={1}
+        onPageChange={() => {}} // TODO: Implement server-side pagination for users if needed
       />
     </div>
   )
