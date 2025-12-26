@@ -55,7 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Resposta inválida do servidor')
       }
 
-      Cookies.set('easycore.token', token, { expires: 1 }) // 1 day
+      // Salvar token no cookie com as mesmas configurações do backend
+      Cookies.set('easycore.token', token, { 
+        expires: 7, // 7 dias
+        path: '/',
+        sameSite: 'lax'
+      })
       localStorage.setItem('easycore.user', JSON.stringify(userData))
       setUser(userData)
 

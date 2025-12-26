@@ -85,3 +85,26 @@ export const userService = {
     return response.data
   },
 }
+
+export const financialService = {
+  createPaymentPlan: async (data: any) => {
+    const response = await api.post('/financial/payment-plans', data)
+    return response.data
+  },
+  getPaymentPlan: async (treatmentId: string) => {
+    const response = await api.get(`/financial/payment-plans/${treatmentId}`)
+    return response.data
+  },
+  getOverdueInstallments: async () => {
+    const response = await api.get('/financial/installments/overdue')
+    return response.data
+  },
+  payInstallment: async (id: string, data: any) => {
+    const response = await api.post(`/financial/installments/${id}/pay`, data)
+    return response.data
+  },
+  getAdminOverview: async () => {
+    const response = await api.get('/admin/financial/overview')
+    return response.data
+  },
+}
