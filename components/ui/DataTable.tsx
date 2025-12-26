@@ -34,7 +34,7 @@ export function DataTable<TData, TValue>({
     pageCount: pageCount ?? -1,
     state: isManual ? {
       pagination: {
-        pageIndex: pageIndex - 1,
+        pageIndex: pageIndex - 1, // Store as 0-based internally
         pageSize: 10,
       },
     } : undefined,

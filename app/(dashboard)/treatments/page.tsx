@@ -140,8 +140,8 @@ export default function TreatmentsPage() {
         data={data?.treatments || []} 
         isLoading={isLoading}
         pageCount={data?.pagination?.totalPages}
-        pageIndex={page - 1} // 0-based index
-        onPageChange={(newPageIndex) => setPage(newPageIndex + 1)} // Convert back to 1-based
+        pageIndex={page}
+        onPageChange={setPage}
       />
     </div>
   )
