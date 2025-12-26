@@ -26,7 +26,7 @@ export function RiskIndicator({ score, level, className }: RiskIndicatorProps) {
       <div className="flex-1">
         <div className="flex items-center justify-between">
           <span className={cn('text-xs font-bold uppercase tracking-wider', color)}>{label}</span>
-          <span className="text-sm font-black text-secondary-900">{Math.round(score * 100)}%</span>
+          <span className="text-sm font-black text-secondary-900">{Math.round(score)}%</span>
         </div>
         <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-secondary-200/50">
           <div 
@@ -35,7 +35,7 @@ export function RiskIndicator({ score, level, className }: RiskIndicatorProps) {
               level === 'medio' ? 'bg-amber-500' : 
               level === 'alto' ? 'bg-orange-500' : 'bg-red-500'
             )} 
-            style={{ width: `${score * 100}%` }}
+            style={{ width: `${score}%` }}
           />
         </div>
       </div>

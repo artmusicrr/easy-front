@@ -24,13 +24,45 @@ import {
 import Link from 'next/link'
 import { formatCurrency, formatDate } from '@/utils/utils'
 
+import { financialService } from '@/services'
+import { Modal } from '@/components/ui/Modal'
+import { Input } from '@/components/ui/Input'
+
 export default function TreatmentDetailsPage() {
   const { id } = useParams() as { id: string }
+  const [selectedInstallment, setSelectedInstallment] = useState<any>(null)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+  const [paymentLoading, setPaymentLoading] = useState(false)
+  const [paymentValue, setPaymentValue] = useState(0)
+  const [paymentMethod, setPaymentMethod] = useState<any>('PIX')
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['treatment', id],
     queryFn: () => treatmentService.getById(id),
   })
+
+  // Novo query para o plano de pagamento
+  const { data: planData } = useQuery({
+    queryKey: ['payment-plan', id],
+    queryFn: () => financialService.getPaymentPlan(id).catch(() => null),
+  })
+
+  const handlePay = async () => {
+    if (!selectedInstallment) return
+    setPaymentLoading(true)
+    try {
+      await financialService.payInstallment(selectedInstallment.id, {
+        valor_pago: Number(paymentValue),
+        forma_pagamento: paymentMethod,
+      })
+      setIsPaymentModalOpen(false)
+      refetch()
+    } catch (err) {
+      console.error('Erro ao pagar:', err)
+    } finally {
+      setPaymentLoading(false)
+    }
+  }
 
   if (isLoading) {
     return <div className="animate-pulse space-y-4">
@@ -136,6 +168,54 @@ export default function TreatmentDetailsPage() {
               </div>
            </Card>
 
+           {/* Parcelas do Plano */}
+           {planData && (
+             <Card title={`Plano de Parcelamento (${planData.total_parcelas}x)`}>
+               <div className="overflow-x-auto">
+                 <table className="w-full text-sm text-left">
+                   <thead className="bg-secondary-50 text-secondary-500 uppercase text-[10px] font-bold">
+                     <tr>
+                       <th className="px-4 py-3">Parcela</th>
+                       <th className="px-4 py-3">Vencimento</th>
+                       <th className="px-4 py-3">Valor</th>
+                       <th className="px-4 py-3">Status</th>
+                       <th className="px-4 py-3 text-right">Ação</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-secondary-100">
+                     {planData.installments.map((inst: any) => (
+                       <tr key={inst.id} className="hover:bg-secondary-50/50 transition-colors">
+                         <td className="px-4 py-3 font-medium">#{inst.numero_parcela}</td>
+                         <td className="px-4 py-3">{formatDate(inst.data_vencimento)}</td>
+                         <td className="px-4 py-3 font-mono">{formatCurrency(inst.valor_esperado)}</td>
+                         <td className="px-4 py-3">
+                           <Badge variant={inst.status === 'paga' ? 'success' : inst.status === 'atrasada' ? 'error' : 'primary'}>
+                             {inst.status}
+                           </Badge>
+                         </td>
+                         <td className="px-4 py-3 text-right">
+                           {inst.status !== 'paga' && (
+                             <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedInstallment(inst)
+                                setPaymentValue(Number(inst.valor_esperado) - Number(inst.valor_pago))
+                                setIsPaymentModalOpen(true)
+                              }}
+                             >
+                               Pagar
+                             </Button>
+                           )}
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+             </Card>
+           )}
+
            <Card title="Histórico de Pagamentos" footer={
               <div className="flex items-center justify-between text-sm">
                  <span className="text-secondary-500 font-medium">Total de registros: {treatment.payments.length}</span>
@@ -158,7 +238,9 @@ export default function TreatmentDetailsPage() {
                                 <p className="text-xs text-secondary-500">{payment.forma_pagamento} &bull; {formatDate(payment.data)}</p>
                              </div>
                           </div>
-                          <Badge variant="secondary">Recebido</Badge>
+                          <Badge variant={Number(payment.valor_pago) === 0 ? 'error' : 'secondary'}>
+                            {Number(payment.valor_pago) === 0 ? 'Calote/Valor 0' : 'Recebido'}
+                          </Badge>
                        </div>
                     ))
                  ) : (
@@ -210,7 +292,7 @@ export default function TreatmentDetailsPage() {
               <div className="space-y-4">
                  <RiskIndicator score={risco.score} level={risco.nivel} />
                  <p className="text-xs text-secondary-500 leading-relaxed bg-secondary-50 p-3 rounded-lg">
-                    Este score é calculado com base no histórico de pagamentos, atrasos e comportamento do paciente em tratamentos anteriores.
+                    Este score (0-100) considera atrasos de parcelas e pagamentos de valor zero.
                  </p>
               </div>
            </Card>
@@ -224,6 +306,41 @@ export default function TreatmentDetailsPage() {
            </Card>
         </div>
       </div>
+
+      {/* Modal de Pagamento */}
+      <Modal 
+        isOpen={isPaymentModalOpen} 
+        onClose={() => setIsPaymentModalOpen(false)}
+        title={`Pagar Parcela #${selectedInstallment?.numero_parcela}`}
+      >
+        <div className="space-y-4 pt-4">
+          <Input 
+            label="Valor do Pagamento" 
+            type="number" 
+            value={paymentValue}
+            onChange={(e) => setPaymentValue(Number(e.target.value))}
+            description="Informe 0 para registrar inadimplência (calote)."
+          />
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-secondary-500 uppercase">Forma de Pagamento</label>
+            <select 
+              className="flex h-10 w-full rounded-lg border border-secondary-300 bg-white px-3 py-2 text-sm text-secondary-900 outline-none"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            >
+              <option value="PIX">PIX</option>
+              <option value="cartao_credito">Cartão de Crédito</option>
+              <option value="cartao_debito">Cartão de Débito</option>
+              <option value="dinheiro">Dinheiro</option>
+              <option value="boleto">Boleto</option>
+            </select>
+          </div>
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => setIsPaymentModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handlePay} isLoading={paymentLoading}>Confirmar Pagamento</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

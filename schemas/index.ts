@@ -61,8 +61,34 @@ export const paymentSchema = z.object({
   observacao: z.string().max(500).optional(),
 })
 
+// --------------------------------
+// Financial (Plans & Installments)
+// --------------------------------
+export const paymentPlanSchema = z.object({
+  treatment_id: z.string().uuid('ID do tratamento inválido'),
+  total_parcelas: z.number().int().min(1).max(24, 'Máximo de 24 parcelas'),
+  data_inicio: z.string().min(1, 'Data de início é obrigatória'),
+  dia_vencimento: z.number().int().min(1).max(28, 'Dia deve ser entre 1 e 28'),
+})
+
+export const payInstallmentSchema = z.object({
+  valor_pago: z.number().min(0, 'Valor não pode ser negativo'),
+  forma_pagamento: z.enum([
+    'PIX',
+    'cartao_credito',
+    'cartao_debito',
+    'dinheiro',
+    'boleto',
+    'transferencia',
+  ]),
+  comprovante_url: z.string().url('URL inválida').optional().or(z.literal('')),
+  observacao: z.string().max(500).optional(),
+})
+
 export type LoginInput = z.infer<typeof loginSchema>
 export type RegisterInput = z.infer<typeof registerSchema>
 export type PatientInput = z.infer<typeof patientSchema>
 export type TreatmentInput = z.infer<typeof treatmentSchema>
 export type PaymentInput = z.infer<typeof paymentSchema>
+export type PaymentPlanInput = z.infer<typeof paymentPlanSchema>
+export type PayInstallmentInput = z.infer<typeof payInstallmentSchema>

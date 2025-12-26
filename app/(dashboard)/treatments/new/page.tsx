@@ -31,11 +31,14 @@ export default function NewTreatmentPage() {
     queryFn: () => userService.getDentists(),
   })
 
+  const [isParcelado, setIsParcelado] = useState(false)
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<TreatmentInput>({
+    watch,
+  } = useForm<TreatmentInput & { total_parcelas?: number; dia_vencimento?: number }>({
     resolver: zodResolver(treatmentSchema),
     defaultValues: {
       patient_id: patientIdParams || '',
@@ -44,12 +47,22 @@ export default function NewTreatmentPage() {
     }
   })
 
-  const onSubmit = async (data: TreatmentInput) => {
+  const onSubmit = async (data: any) => {
     setIsLoading(true)
     setError(null)
     try {
-      await treatmentService.create(data)
-      router.push('/treatments')
+      const treatment = await treatmentService.create(data)
+      
+      if (isParcelado && data.total_parcelas) {
+        await financialService.createPaymentPlan({
+          treatment_id: treatment.id,
+          total_parcelas: data.total_parcelas,
+          data_inicio: data.data_inicio,
+          dia_vencimento: data.dia_vencimento || 1,
+        })
+      }
+      
+      router.push(`/treatments/${treatment.id}`)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Erro ao criar tratamento.')
     } finally {
@@ -106,7 +119,6 @@ export default function NewTreatmentPage() {
                 </select>
               </div>
               {errors.dentista_id && <p className="text-xs font-medium text-red-500">{errors.dentista_id.message}</p>}
-              <p className="text-[10px] text-secondary-400 italic">Obrigatório se você não for o dentista.</p>
             </div>
 
             <div className="relative">
@@ -144,8 +156,46 @@ export default function NewTreatmentPage() {
               />
             </div>
 
-            <div className="flex items-end text-xs text-secondary-500 bg-secondary-50 p-3 rounded-lg border border-secondary-100 italic">
-              Nota: O score de risco será calculado automaticamente após o cadastro inicial.
+            {/* Opções de Parcelamento */}
+            <div className="md:col-span-2 p-4 rounded-xl border border-secondary-200 bg-secondary-50/50 space-y-4">
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  id="parcelar" 
+                  checked={isParcelado}
+                  onChange={(e) => setIsParcelado(e.target.checked)}
+                  className="h-4 w-4 rounded border-secondary-300 text-primary-600 focus:ring-primary-500"
+                />
+                <label htmlFor="parcelar" className="text-sm font-bold text-secondary-900 cursor-pointer">
+                  Parcelar este tratamento
+                </label>
+              </div>
+
+              {isParcelado && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-secondary-500 uppercase">Número de Parcelas</label>
+                    <select 
+                      className="flex h-10 w-full rounded-lg border border-secondary-300 bg-white px-3 py-2 text-sm text-secondary-900 outline-none"
+                      {...register('total_parcelas', { valueAsNumber: true })}
+                    >
+                      {[...Array(24)].map((_, i) => (
+                        <option key={i+1} value={i+1}>{i+1}x</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-secondary-500 uppercase">Dia de Vencimento</label>
+                    <Input 
+                      type="number" 
+                      min={1} 
+                      max={28} 
+                      placeholder="Ex: 10"
+                      {...register('dia_vencimento', { valueAsNumber: true })}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
