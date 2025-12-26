@@ -138,7 +138,10 @@ export default function TreatmentsPage() {
       <DataTable 
         columns={columns} 
         data={data?.treatments || []} 
-        isLoading={isLoading} 
+        isLoading={isLoading}
+        pageCount={data?.pagination?.totalPages}
+        pageIndex={page - 1} // 0-based index
+        onPageChange={(newPageIndex) => setPage(newPageIndex + 1)} // Convert back to 1-based
       />
     </div>
   )
