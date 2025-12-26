@@ -95,7 +95,7 @@ export function Header() {
             <div className="absolute left-0 top-full mt-2 w-full max-h-[400px] overflow-y-auto rounded-xl border border-secondary-200 bg-white shadow-xl">
               {results.patients.length === 0 && results.treatments.length === 0 ? (
                 <div className="p-4 text-center text-sm text-secondary-500">
-                  Nenhum resultado encontrado para "{search}"
+                  Nenhum resultado encontrado para &quot;{search}&quot;
                 </div>
               ) : (
                 <div className="p-2">
