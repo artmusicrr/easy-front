@@ -23,6 +23,7 @@ export function DataTable<TData, TValue>({
   data,
   isLoading,
   pageCount,
+<<<<<<< HEAD
   pageIndex = 1,
   onPageChange,
 }: DataTableProps<TData, TValue>) {
@@ -37,8 +38,41 @@ export function DataTable<TData, TValue>({
       },
     },
     manualPagination: !!pageCount,
+=======
+  pageIndex,
+  onPageChange,
+}: DataTableProps<TData, TValue> & { 
+  pageCount?: number
+  pageIndex?: number
+  onPageChange?: (page: number) => void 
+}) {
+  const isManual = pageCount !== undefined
+
+  const table = useReactTable({
+    data,
+    columns,
+    pageCount: pageCount ?? -1,
+    state: isManual ? {
+      pagination: {
+        pageIndex: pageIndex || 0,
+        pageSize: 10, // Assuming fixed page size for now or inherited
+      },
+    } : undefined,
+    manualPagination: isManual,
+    onPaginationChange: isManual ? (updater) => {
+      if (typeof updater === 'function') {
+        const newState = updater({
+          pageIndex: pageIndex || 0,
+          pageSize: 10,
+        })
+        onPageChange?.(newState.pageIndex)
+      } else {
+        onPageChange?.(updater.pageIndex)
+      }
+    } : undefined,
+>>>>>>> b576676 (ajuste da branch)
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: isManual ? undefined : getPaginationRowModel(),
   })
 
   return (
